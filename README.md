@@ -19,3 +19,17 @@ for macOS.
 - `UNZIP`: A program that will write the first file of a zip file to output
 - `WGET`: A `wget` compatible program
 - `OS`: Either "Linux" or "Darwin"; used for configuring OS-specific mounts
+
+## The Build Process
+
+Several things will happen during your build which require user interaction:
+
+- You will be asked to remove the disk and power on the device
+- The device will boot, and before the login screen, will list an IP address
+- You will enter the IP address, and then be prompted for a password
+- You will be prompted to load SSH keys.
+- You will be prompted to change the default password
+
+After that, the script should be finished and you should be prompted to power
+down the device. You should no longer use SSH with a password to connect to the
+device, but instead use the SSH key.
