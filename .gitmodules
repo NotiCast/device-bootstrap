@@ -1,0 +1,3 @@
+[submodule "vendor/iot-core"]
+	path = vendor/iot-core
+	url = git@github.com:NotiCast/iot-core
