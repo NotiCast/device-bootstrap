@@ -1,7 +1,7 @@
 #!/bin/sh
 # vim:set et sts=0 sw=2 ts=2:
 
-set -x
+set -eux
 
 # Load SSH keys
 
@@ -17,5 +17,5 @@ passwd
 
 # Disable password login over SSH
 
-sed -i "/PasswordAuthentication/d" /etc/ssh/sshd_config
-echo "PasswordAuthentication no" > /etc/ssh/sshd_config
+sudo sed -i "/PasswordAuthentication/d" /etc/ssh/sshd_config
+echo "PasswordAuthentication no" | sudo tee -a /etc/ssh/sshd_config
