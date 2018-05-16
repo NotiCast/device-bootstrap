@@ -35,7 +35,8 @@ fi
 
 [ ! -f raspbian.img ] && $UNZIP img.zip > raspbian.img
 
-# macOS likes to auto-mount the boot partition. ~joy~
+# Unmount auto-mounted partitions
+
 case $OS in
   Darwin)
     diskutil unmount $BOOT_PARTITION
@@ -43,7 +44,11 @@ case $OS in
     ;;
 esac
 
+# Write image to disk
+
 pv < raspbian.img | sudo dd of="$DISK_FILE" || echo "Make sure disk is not mounted"
+
+# Remount boot partition and enable SSH
 
 case $OS in
   Darwin)
@@ -61,13 +66,32 @@ case $OS in
     ;;
 esac
 
-echo "Please remove the SD card and boot up the device."
-echo "Please enter your IP Address:"
+# Run bootstrap.sh
+
+cat <<EOF
+
+Please remove the SD card and boot up the device. On bootup, the device will
+list it's IP address, a few lines above the login prompt. Enter the IP address:
+
+EOF
+
 read ip_address
 ssh_address="$DEFAULT_USERNAME@$ip_address"
 
 echo "The default password is: '$DEFAULT_PASSWORD'."
 scp bootstrap.sh "$ssh_address":
-ssh "$ssh_address" sh bootstrap.sh
+ssh -t "$ssh_address" sh bootstrap.sh  # use -t to enable terminal input
+
+# Copy software to devices
+
+rsync -vr vendor/ "$ssh_address":
+
+# Run all vendor bootstraps from local machine (copying secrets, etc.)
+
+find vendor/ -type f -name 'bootstrap-local.sh' -exec sh {} "$ip_address" \;
+
+# Run all vendor bootstraps on remote machine
+
+ssh -t "$ssh_address" find vendor/ -type f -name 'bootstrap.sh' -exec sh {} '\;'
 
 echo "You can now power off your device."
