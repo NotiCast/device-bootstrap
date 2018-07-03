@@ -47,8 +47,8 @@ os-post-linux:
 # }}}
 
 shell-keys: $(foreach key,$(KEYS),$(key).pub)
+	rm -rf ansible/keys
 	mkdir -p ansible/keys
-	rm ansible/keys/*
 	mv *.pub ansible/keys
 
 %.pub:
