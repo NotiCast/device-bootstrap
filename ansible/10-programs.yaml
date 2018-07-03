@@ -18,8 +18,9 @@
     synchronize:
       group: no
       owner: no
-      src: vendor/
+      src: ../vendor/
       dest: /home/pi/vendor/
+    register: copied_files
 
   - name: Get setup.py registers
     command: find /home/pi/vendor -type f -name 'setup.py'
@@ -33,6 +34,7 @@
     register: package
     changed_when: "package.rc == 0"
     with_items: "{{ packages.stdout_lines }}"
+    when: copied_files.changed
 
   - name: Clean chain directory
     file: path=/tmp/chain state=absent
@@ -63,8 +65,7 @@
       state: link
 
   - name: Enable systemd unit
-    systemd:
-      user: true
-      name: noticast.service
-      enabled: true
-      state: started
+    shell: |
+      systemctl --user daemon-reload
+      systemctl --user enable noticast.service
+      systemctl --user start noticast.service
