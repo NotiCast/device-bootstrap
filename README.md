@@ -7,8 +7,6 @@ Change these as you see fit. It is advised to go through the script to make
 sure the commands look like they're supposed to. Most defaults are configured
 for macOS.
 
-- `DEFAULT_USERNAME`: The default username for the downloaded image
-- `DEFAULT_PASSWORD`: The default password for the downloaded image
 - `IMG_URL`: The URL of a zip file containing the image, defaulting to a
     (hopefully) recent Raspbian
 - `IMG_SUM`: The sha256 sum of the zip file containing the image
@@ -22,14 +20,12 @@ for macOS.
 
 ## The Build Process
 
-Several things will happen during your build which require user interaction:
-
-- You will be asked to remove the disk and power on the device
-- The device will boot, and before the login screen, will list an IP address
-- You will enter the IP address, and then be prompted for a password
-- You will be prompted to load SSH keys.
-- You will be prompted to change the default password
-
-After that, the script should be finished and you should be prompted to power
-down the device. You should no longer use SSH with a password to connect to the
-device, but instead use the SSH key.
+1. Run `make install` to install the image onto the SD card
+2. Remove the SD card, put it in the device, and let it start booting
+  - Note down the IP address for use with later steps
+  - The device will print out an IP address if you can't nmap to find it
+3. Run `make shell-keys` to generate the shell keys used by Ansible
+4. Once the device boots up, run the following (s/'10.1.30.104'/your IP):
+  - **Note:** The comma on the commands below *is* necessary
+  - `ansible-playbook ansible/main.yml -i '10.1.30.104,'`
+  - `ansible-playbook ansible/10-programs.yml -i '10.1.30.104,'`
