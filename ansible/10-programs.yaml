@@ -1,0 +1,70 @@
+---
+- hosts: all
+  vars:
+    - ansible_ssh_user: pi
+    - ca_certs:
+      - url: https://www.symantec.com/content/en/us/enterprise/verisign/roots/VeriSign-Class%203-Public-Primary-Certification-Authority-G5.pem
+        dest: symantec
+      - url: https://www.amazontrust.com/repository/AmazonRootCA1.pem 
+        dest: aws1
+      - url: https://www.amazontrust.com/repository/AmazonRootCA2.pem 
+        dest: aws2
+      - url: https://www.amazontrust.com/repository/AmazonRootCA3.pem 
+        dest: aws3
+      - url: https://www.amazontrust.com/repository/AmazonRootCA4.pem 
+        dest: aws4
+  tasks:
+  - name: Copy vendored files
+    synchronize:
+      group: no
+      owner: no
+      src: vendor/
+      dest: /home/pi/vendor/
+
+  - name: Get setup.py registers
+    command: find /home/pi/vendor -type f -name 'setup.py'
+    register: packages
+    changed_when: false
+
+  - name: Install for every setup.py
+    command: pip3 install --user .
+    args:
+      chdir: "{{ item | dirname }}"
+    register: package
+    changed_when: "package.rc == 0"
+    with_items: "{{ packages.stdout_lines }}"
+
+  - name: Clean chain directory
+    file: path=/tmp/chain state=absent
+    changed_when: false
+  - name: Build directory for CA chain
+    file: path=/tmp/chain state=directory
+    changed_when: false
+
+  - name: Clone CA certificates
+    get_url:
+      url: "{{ item.url }}"
+      dest: "/tmp/chain/{{ item.dest }}"
+    with_items: "{{ ca_certs }}"
+    changed_when: false
+
+  - name: Copy new CA chain
+    assemble:
+      src: /tmp/chain
+      dest: /home/pi/vendor/conf/chain.pem
+
+  - name: Set up systemd for user
+    file: path=/home/pi/.config/systemd/user state=directory
+
+  - name: Create symlink to systemd unit
+    file:
+      src: /home/pi/vendor/iot-core/noticast.service
+      dest: /home/pi/.config/systemd/user/noticast.service
+      state: link
+
+  - name: Enable systemd unit
+    systemd:
+      user: true
+      name: noticast.service
+      enabled: true
+      state: started
