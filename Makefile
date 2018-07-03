@@ -20,6 +20,7 @@ install: os-pre-$(OS) flash os-post-$(OS)
 
 flash: raspbian.img
 	pv < raspbian.img | sudo dd of="$(DISK_FILE)" bs=1m
+	sync
 
 # {{{ pre-write stuff | unmount partition
 
