@@ -1,6 +1,9 @@
-IMG_URL = https://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2018-04-19/2018-04-18-raspbian-stretch-lite.zip
-IMG_SUM = 5a0747b2bfb8c8664192831b7dc5b22847718a1cb77639a1f3db3683b242dc96
+IMG_URL = https://dl.armbian.com/orangepizero/Debian_stretch_next.7z
+IMG_SUM = b1bc3f794ddd44a86e9290b15124ca40b5cce58b5341ce7d0739c18ff93d347f
 IMG_SUM_PROGRAM = gsha256sum --check
+
+IMG_ZIP = Debian_stretch_next.7z
+IMG_FILE = Armbian_5.38_Orangepizero_Debian_stretch_next_4.14.14.img
 
 OS = $(shell uname | tr '[:upper:]' '[:lower:]')
 
@@ -8,18 +11,18 @@ DISK_FILE = /dev/disk2
 BOOT_PARTITION = $(DISK_FILE)s1
 
 WGET = wget
-UNZIP = unzip -p
+UNZIP = 7za x
 
 KEYS = vandor2012@gmail.com
 
 .PHONY: image shell-keys
 
-all: install flash shell-keys
+all: install shell-keys
 
 install: os-pre-$(OS) flash os-post-$(OS)
 
 flash: raspbian.img
-	pv < raspbian.img | sudo dd of="$(DISK_FILE)" bs=1m
+	pv < "$(IMG_FILE)" | sudo dd of="$(DISK_FILE)" bs=1m
 	sync
 
 # {{{ pre-write stuff | unmount partition
@@ -51,13 +54,14 @@ shell-keys: $(foreach key,$(KEYS),$(key).pub)
 	rm -rf ansible/keys
 	mkdir -p ansible/keys
 	mv *.pub ansible/keys
+	cp keys/*.pub ansible/keys
 
 %.pub:
 	gpg --export-ssh-key $(@:.pub=) > $@
 
-raspbian.img: raspbian.img.zip
-	echo "$(IMG_SUM) raspbian.img.zip" | $(IMG_SUM_PROGRAM)
-	$(UNZIP) raspbian.img.zip > raspbian.img
+$(IMG_FILE): $(IMG_ZIP)
+	echo "$(IMG_SUM) $(IMG_ZIP)" | $(IMG_SUM_PROGRAM)
+	$(UNZIP) $(IMG_ZIP)
 
-raspbian.img.zip:
-	$(WGET) $(IMG_URL) -O raspbian.img.zip
+$(IMG_ZIP):
+	$(WGET) $(IMG_URL) -O $(IMG_ZIP)
