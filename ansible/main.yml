@@ -2,6 +2,7 @@
 - hosts: all
   vars:
     - ansible_ssh_pass: raspberry
+    - ansible_sudo_pass: raspberry
   gather_facts: false
   remote_user: pi
   become: yes
