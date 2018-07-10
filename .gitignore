@@ -1,3 +1,4 @@
 *.img
 *.zip
-**/*.pub
+*.7z
+ansible/keys/*.pub
