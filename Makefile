@@ -45,7 +45,7 @@ os-pre-linux:
 # {{{ post-write stuff | touch the boot partition's `ssh` file
 
 os-post-darwin:
-	unmount $(BOOT_PARTITION); true
+	diskutil unmount $(BOOT_PARTITION); true
 
 os-post-linux:
 	umount $(BOOT_PARTITION); true
