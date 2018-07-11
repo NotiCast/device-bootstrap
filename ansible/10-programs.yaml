@@ -50,10 +50,15 @@
     with_items: "{{ ca_certs }}"
     changed_when: false
 
+  - name: Ensure config directory for NotiCast exists
+    block:
+    - file: path=/home/pi/.config/noticast state=directory
+    - file: path=/home/pi/.config/noticast/connection state=directory
+
   - name: Copy new CA chain
     assemble:
       src: /tmp/chain
-      dest: /home/pi/vendor/conf/chain.pem
+      dest: /home/pi/.config/noticast/chain.pem
 
   - name: Set up systemd for user
     file: path=/home/pi/.config/systemd/user state=directory
