@@ -1,0 +1,10 @@
+[Unit]
+Description=Automatically mount NotiCast-compatible flash drives
+
+[Service]
+ExecStartPre=/bin/mkdir -p /home/pi/.config/noticast
+ExecStart=/bin/mount /dev/sda1 /home/pi/.config/noticast/connection
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target
