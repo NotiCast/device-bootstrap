@@ -1,6 +1,17 @@
 # Raspberry Pi Bootstrap
 <!-- vim:set et sts=0 sw=2 ts=2: -->
 
+## Flash Drive Configuration
+
+To configure a NotiCast device, you can place the following files on the root
+of a flash drive:
+
+- `iot-endpoint` - A file containing the NotiCast AWS IoT endpoint
+- `cert.crt` - An AWS-validated IoT Certificate
+  - If obtained from Amazon, this is `certificate.pem.crt`
+- `key` - The private key associated with the certificate
+  - If obtained from Amazon, this is `private.pem.key`
+
 ## Environment Variables
 
 Change these as you see fit. It is advised to go through the script to make
@@ -29,6 +40,5 @@ for macOS.
   - Default user/pass for Raspbian is `pi` and `raspberry`
 3. Run `make shell-keys` to generate the shell keys used by Ansible
 4. Once the device boots up, run the following (s/'10.1.30.104'/your IP):
-  - **Note:** The comma on the commands below *is* necessary
-  - `ansible-playbook ansible/main.yml -i '10.1.30.104,'`
-  - `ansible-playbook ansible/10-programs.yml -i '10.1.30.104,'`
+  - **Note:** Replace `raspberry` with the password of your user
+  - `make deploy DEVICE_IP=10.1.30.104 DEVICE_PASS=raspberry`
