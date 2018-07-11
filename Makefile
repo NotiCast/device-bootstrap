@@ -11,9 +11,8 @@ DISK_FILE = /dev/disk2
 BOOT_PARTITION = $(DISK_FILE)s1
 
 WGET = wget
-UNZIP = 7za x
-
-KEYS = vandor2012@gmail.com
+UNZIP = yes s | 7za e
+UNZIP_ARGS = $(IMG_FILE)
 
 .PHONY: image shell-keys
 
@@ -21,7 +20,7 @@ all: install shell-keys
 
 install: os-pre-$(OS) flash os-post-$(OS)
 
-flash: raspbian.img
+flash: $(IMG_FILE)
 	pv < "$(IMG_FILE)" | sudo dd of="$(DISK_FILE)" bs=1m
 	sync
 
@@ -38,30 +37,16 @@ os-pre-linux:
 # {{{ post-write stuff | touch the boot partition's `ssh` file
 
 os-post-darwin:
-	diskutil mount $(BOOT_PARTITION)
-	touch /Volumes/boot/ssh
-	diskutil unmount $(BOOT_PARTITION)
+	unmount $(BOOT_PARTITION); true
 
 os-post-linux:
-	mkdir -p boot
-	mount $(BOOT_PARTITION) boot
-	touch ./boot/ssh
-	unmount $(BOOT_PARTITION)
+	umount $(BOOT_PARTITION); true
 
 # }}}
 
-shell-keys: $(foreach key,$(KEYS),$(key).pub)
-	rm -rf ansible/keys
-	mkdir -p ansible/keys
-	mv *.pub ansible/keys
-	cp keys/*.pub ansible/keys
-
-%.pub:
-	gpg --export-ssh-key $(@:.pub=) > $@
-
 $(IMG_FILE): $(IMG_ZIP)
 	echo "$(IMG_SUM) $(IMG_ZIP)" | $(IMG_SUM_PROGRAM)
-	$(UNZIP) $(IMG_ZIP)
+	$(UNZIP) $(IMG_ZIP) $(UNZIP_ARGS)
 
 $(IMG_ZIP):
 	$(WGET) $(IMG_URL) -O $(IMG_ZIP)
