@@ -14,11 +14,19 @@ WGET = wget
 UNZIP = yes s | 7za e
 UNZIP_ARGS = $(IMG_FILE)
 
-.PHONY: image shell-keys
+.PHONY: image install deploy
 
-all: install shell-keys
+all: install
 
 install: os-pre-$(OS) flash os-post-$(OS)
+
+deploy:
+	@echo "DEVICE_IP: $(DEVICE_IP)"
+	@echo "DEVICE_PASS: $(DEVICE_PASS)"
+	ansible-playbook ansible/main.yml -i "$(DEVICE_IP)," \
+		-e "ansible_ssh_pass=$(DEVICE_PASS)" \
+		-e "ansible_sudo_pass=$(DEVICE_PASS)"
+	ansible-playbook ansible/10-programs.yaml -i "$(DEVICE_IP),"
 
 flash: $(IMG_FILE)
 	pv < "$(IMG_FILE)" | sudo dd of="$(DISK_FILE)" bs=1m
