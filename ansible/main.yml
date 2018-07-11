@@ -1,8 +1,5 @@
 ---
 - hosts: all
-  vars:
-    - ansible_ssh_pass: raspberry
-    - ansible_sudo_pass: raspberry
   gather_facts: false
   remote_user: pi
   become: yes
@@ -12,6 +9,10 @@
       key: "{{ lookup('file', item) }}"
       user: pi
     with_fileglob: 'keys/*.pub'
+
+  - name: Disable apt-daily.timer for Orange Pi Armbian
+    command: systemctl disable apt-daily.timer
+    ignore_errors: true
 
   - name: Update System
     apt:
@@ -42,3 +43,12 @@
       path: /boot/armbianEnv.txt
       regexp: "^overlays="
       line: "overlays=usbhost2 usbhost3 analog-codec"
+
+  - name: Enable systemd unit to auto-mount flash drives
+    block:
+    - copy:
+        src: automount-flashdrive.service
+        dest: /etc/systemd/system/automount-flashdrive.service
+    - shell: |
+        systemctl daemon-reload
+        systemctl enable automount-flashdrive.service
