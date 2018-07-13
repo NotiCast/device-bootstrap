@@ -108,7 +108,7 @@
           Description=Run ansible-pull every half hour
 
           [Timer]
-          OnCalendar=0/30:00
+          OnUnitActiveSec=15m
 
           [Install]
           WantedBy=timers.target
