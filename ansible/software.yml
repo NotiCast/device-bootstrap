@@ -84,7 +84,7 @@
         dest: /home/pi/.config/ansible/ansible-pull.env
         content: |
           GIT_REPO=https://github.com/NotiCast/device-bootstrap.git
-          GIT_BRANCH=auto-update
+          GIT_BRANCH=master
           GIT_PATH=/home/pi/device-bootstrap
           PLAYBOOK_FILE=/home/pi/device-bootstrap/ansible/software.yml
           ANSIBLE_LOCAL_TEMP=/home/pi/.ansible/tmp
