@@ -71,11 +71,13 @@
       dest: /home/pi/.config/systemd/user/noticast.service
       state: link
 
-  - name: Enable systemd unit
-    shell: |
-      systemctl --user daemon-reload
-      systemctl --user enable noticast.service
-      systemctl --user start noticast.service
+  - name: Enable systemd for the NotiCast service
+    systemd:
+      name: noticast.service
+      state: started
+      enabled: true
+      user: true
+
   - name: Install automated update system via ansible-pull
     block:
     - apt: name=ansible
@@ -120,5 +122,12 @@
 
           [Install]
           WantedBy=default.target
-    - command: systemctl --user enable ansible-pull.service
-    - command: systemctl --user enable ansible-pull.timer
+    - systemd:
+        name: ansible-pull.service
+        enabled: true
+        user: true
+    - systemd:
+        name: ansible-pull.timer
+        enabled: true
+        state: started
+        user: true

@@ -123,3 +123,4 @@
     - systemd:
         name: ansible-pull.timer
         enabled: true
+        state: started
