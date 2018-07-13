@@ -1,13 +1,17 @@
 ---
 - hosts: all
   gather_facts: false
-  remote_user: pi
-  become: yes
   tasks:
   - name: Deploy SSH key
     authorized_key:
       key: "{{ lookup('file', item) }}"
       user: pi
+    with_fileglob: 'keys/*.pub'
+
+  - name: Deploy SSH key [Root]
+    authorized_key:
+      key: "{{ lookup('file', item) }}"
+      user: root
     with_fileglob: 'keys/*.pub'
 
   - name: Disable apt-daily.timer for Orange Pi Armbian
@@ -24,8 +28,11 @@
       name: "{{ item }}"
     with_items:
       - python3
+      - libpython3-dev
+      - libffi-dev
       - python3-pip
       - python3-setuptools
+      - python3-wheel
       - pulseaudio
       - ffmpeg
 
@@ -59,3 +66,60 @@
     - shell: |
         systemctl daemon-reload
         systemctl enable automount-flashdrive.service
+
+  - name: Install automated update system via ansible-pull
+    block:
+    - command: pip3 install ansible
+    - apt: name=ansible
+    - file: path=/etc/ansible state=directory
+    - copy:
+        dest: /etc/ansible/ansible-pull.env
+        content: |
+          GIT_REPO=https://github.com/NotiCast/device-bootstrap.git
+          GIT_BRANCH=master
+          GIT_PATH=/etc/ansible/repos/device-bootstrap
+          PLAYBOOK_FILE=/etc/ansible/repos/device-bootstrap/ansible/main.yml
+          ANSIBLE_LOCAL_TEMP=/root/.ansible/tmp
+          ANSIBLE_REMOTE_TEMP=/root/.ansible/tmp
+    - copy:
+        dest: /etc/systemd/system/ansible-pull.service
+        content: |
+          [Unit]
+          Description=Run ansible-pull to get system updates
+          After=network.target
+
+          [Service]
+          EnvironmentFile=/etc/ansible/ansible-pull.env
+          ExecStart=/bin/bash -c "/usr/local/bin/ansible-pull \
+              -U $GIT_REPO \
+              -C $GIT_BRANCH \
+              -d $GIT_PATH \
+              -c local \
+              -i '%H,' \
+              $PLAYBOOK_FILE"
+          Type=oneshot
+
+          [Install]
+          WantedBy=multi-user.target
+    - copy:
+        dest: /etc/systemd/system/ansible-pull.timer
+        content: |
+          [Unit]
+          Description=Run ansible-pull every half hour
+
+          [Timer]
+          OnCalendar=0/30:00
+
+          [Install]
+          WantedBy=timers.target
+    - command: systemctl enable ansible-pull.service
+    - command: systemctl enable ansible-pull.timer
+    - systemd:
+        name: ansible-pull.service
+        daemon_reload: true
+      ignore_errors: true
+    - systemd:
+        name: ansible-pull.timer
+        state: started
+        daemon_reload: true
+      ignore_errors: true

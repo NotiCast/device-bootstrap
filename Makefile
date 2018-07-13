@@ -23,7 +23,7 @@ install: os-pre-$(OS) flash os-post-$(OS)
 deploy:
 	@echo "DEVICE_IP: $(DEVICE_IP)"
 	@echo "DEVICE_PASS: $(DEVICE_PASS)"
-	ansible-playbook ansible/main.yml -i "$(DEVICE_IP)," \
+	ansible-playbook ansible/main.yml -i "root@$(DEVICE_IP)," \
 		-e "ansible_ssh_pass=$(DEVICE_PASS)" \
 		-e "ansible_sudo_pass=$(DEVICE_PASS)"
 	ansible-playbook ansible/software.yml -i "$(DEVICE_IP),"

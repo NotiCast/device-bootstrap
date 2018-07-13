@@ -74,3 +74,51 @@
       systemctl --user daemon-reload
       systemctl --user enable noticast.service
       systemctl --user start noticast.service
+  - name: Install automated update system via ansible-pull
+    block:
+    - apt: name=ansible
+    - file: path=/home/pi/.config/ansible state=directory
+    - copy:
+        dest: /home/pi/.config/ansible/ansible-pull.env
+        content: |
+          GIT_REPO=https://github.com/NotiCast/device-bootstrap.git
+          GIT_BRANCH=master
+          GIT_PATH=/home/pi/device-bootstrap
+          PLAYBOOK_FILE=/home/pi/device-bootstrap/ansible/software.yml
+          ANSIBLE_LOCAL_TEMP=/home/pi/.ansible/tmp
+          ANSIBLE_REMOTE_TEMP=/home/pi/.ansible/tmp
+    - copy:
+        dest: /home/pi/.config/systemd/user/ansible-pull.service
+        content: |
+          [Unit]
+          Description=Run ansible-pull to get system updates
+          After=network.target
+
+          [Service]
+          EnvironmentFile=/home/pi/.config/ansible/ansible-pull.env
+          ExecStart=/bin/bash -c "/usr/local/bin/ansible-pull \
+              -U $GIT_REPO \
+              -C $GIT_BRANCH \
+              -d $GIT_PATH \
+              -c local \
+              -i '%H,' \
+              $PLAYBOOK_FILE"
+          Type=oneshot
+
+          [Install]
+          WantedBy=default.target
+    - copy:
+        dest: /home/pi/.config/systemd/user/ansible-pull.timer
+        content: |
+          [Unit]
+          Description=Run ansible-pull every half hour
+
+          [Timer]
+          OnCalendar=0/30:00
+
+          [Install]
+          WantedBy=default.target
+    - command: systemctl --user enable ansible-pull.service
+    - command: systemctl --user start ansible-pull.service
+    - command: systemctl --user enable ansible-pull.timer
+    - command: systemctl --user start ansible-pull.timer
