@@ -121,6 +121,4 @@
           [Install]
           WantedBy=default.target
     - command: systemctl --user enable ansible-pull.service
-    - command: systemctl --user start ansible-pull.service
     - command: systemctl --user enable ansible-pull.timer
-    - command: systemctl --user start ansible-pull.timer
