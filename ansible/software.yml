@@ -20,6 +20,8 @@
       owner: no
       src: ../vendor/
       dest: /home/pi/vendor/
+      rsync_opts:
+        - "--exclude=.git"
     register: copied_files
 
   - name: Get setup.py registers
@@ -82,7 +84,7 @@
         dest: /home/pi/.config/ansible/ansible-pull.env
         content: |
           GIT_REPO=https://github.com/NotiCast/device-bootstrap.git
-          GIT_BRANCH=master
+          GIT_BRANCH=auto-update
           GIT_PATH=/home/pi/device-bootstrap
           PLAYBOOK_FILE=/home/pi/device-bootstrap/ansible/software.yml
           ANSIBLE_LOCAL_TEMP=/home/pi/.ansible/tmp
