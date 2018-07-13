@@ -15,8 +15,10 @@
     with_fileglob: 'keys/*.pub'
 
   - name: Disable apt-daily.timer for Orange Pi Armbian
-    command: systemctl disable apt-daily.timer
-    ignore_errors: true
+    systemd:
+      name: apt-daily.timer
+      enabled: false
+      state: stopped
 
   - name: Update System
     apt:
@@ -63,13 +65,15 @@
     - copy:
         src: automount-flashdrive.service
         dest: /etc/systemd/system/automount-flashdrive.service
-    - shell: |
-        systemctl daemon-reload
-        systemctl enable automount-flashdrive.service
+    - systemd:
+        name: automount-flashdrive.service
+        enabled: true
 
   - name: Install automated update system via ansible-pull
     block:
-    - command: pip3 install ansible
+    - pip:
+        name: ansible
+        executable: pip3
     - apt: name=ansible
     - file: path=/etc/ansible state=directory
     - copy:
@@ -112,5 +116,10 @@
 
           [Install]
           WantedBy=timers.target
-    - command: systemctl enable ansible-pull.service
-    - command: systemctl enable ansible-pull.timer
+
+    - systemd:
+        name: ansible-pull.service
+        enabled: true
+    - systemd:
+        name: ansible-pull.timer
+        enabled: true
