@@ -26,7 +26,7 @@ deploy:
 	ansible-playbook ansible/main.yml -i "$(DEVICE_IP)," \
 		-e "ansible_ssh_pass=$(DEVICE_PASS)" \
 		-e "ansible_sudo_pass=$(DEVICE_PASS)"
-	ansible-playbook ansible/10-programs.yaml -i "$(DEVICE_IP),"
+	ansible-playbook ansible/software.yml -i "$(DEVICE_IP),"
 
 flash: $(IMG_FILE)
 	pv < "$(IMG_FILE)" | sudo dd of="$(DISK_FILE)" bs=1m
