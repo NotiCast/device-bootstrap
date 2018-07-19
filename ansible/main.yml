@@ -1,5 +1,7 @@
 ---
 - hosts: all
+  vars:
+    is_armbian: false
   gather_facts: false
   tasks:
   - name: Deploy SSH key
@@ -19,6 +21,7 @@
       name: apt-daily.timer
       enabled: false
       state: stopped
+    when: is_armbian == true
 
   - name: Update System
     apt:
@@ -35,18 +38,7 @@
       - python3-pip
       - python3-setuptools
       - python3-wheel
-      - pulseaudio
       - ffmpeg
-
-  - name: Configure PulseAudio to not use module-suspend-on-idle
-    lineinfile:
-      path: /etc/pulse/default.pa
-      regexp: "module-suspend-on-idle"
-      line: "#load-module module-suspend-on-idle"
-
-  - name: Set up systemd for user
-    command: loginctl enable-linger pi
-    changed_when: false
 
   - name: Disable SSH password authentication
     lineinfile:
@@ -59,6 +51,7 @@
       path: /boot/armbianEnv.txt
       regexp: "^overlays="
       line: "overlays=usbhost2 usbhost3 analog-codec"
+    when: is_armbian == true
 
   - name: Enable systemd unit to auto-mount flash drives
     block:
@@ -67,6 +60,25 @@
         dest: /etc/systemd/system/automount-flashdrive.service
     - systemd:
         name: automount-flashdrive.service
+        enabled: true
+
+  - name: Enable systemd unit to auto-mount flash drives
+    block:
+    - copy:
+        dest: /etc/clock_speed.conf
+        content: |
+          CLOCK_SPEED=960000
+    - copy:
+        src: clock-speed.service
+        dest: /etc/systemd/system/clock-speed.service
+    - copy:
+        src: clock-speed.timer
+        dest: /etc/systemd/system/clock-speed.timer
+    - systemd:
+        name: clock-speed.service
+        enabled: true
+    - systemd:
+        name: clock-speed.timer
         enabled: true
 
   - name: Install automated update system via ansible-pull
@@ -112,7 +124,7 @@
           Description=Run ansible-pull every half hour
 
           [Timer]
-          OnUnitActiveSec=15m
+          OnUnitActiveSec=30m
 
           [Install]
           WantedBy=timers.target
@@ -124,3 +136,66 @@
         name: ansible-pull.timer
         enabled: true
         state: started
+
+  - name: Install automated update system via ansible-pull
+    block:
+    - copy:
+        dest: /etc/ansible/ansible-pull-software.env
+        content: |
+          GIT_REPO=https://github.com/NotiCast/device-bootstrap.git
+          GIT_BRANCH=master
+          GIT_PATH=/home/pi/device-bootstrap
+          PLAYBOOK_FILE=/home/pi/device-bootstrap/ansible/software.yml
+          ANSIBLE_LOCAL_TEMP=/home/pi/.ansible/tmp
+          ANSIBLE_REMOTE_TEMP=/home/pi/.ansible/tmp
+    - copy:
+        dest: /etc/systemd/system/ansible-pull-software.service
+        content: |
+          [Unit]
+          Description=Run ansible-pull to get system updates
+          After=network.target
+
+          [Service]
+          EnvironmentFile=/home/pi/.config/ansible/ansible-pull-software.env
+          ExecStart=/bin/bash -c "/usr/local/bin/ansible-pull \
+              -U $GIT_REPO \
+              -C $GIT_BRANCH \
+              -d $GIT_PATH \
+              -c local \
+              -i '%H,' \
+              $PLAYBOOK_FILE"
+          Type=oneshot
+          User=pi
+
+          [Install]
+          WantedBy=multi-user.target
+    - copy:
+        dest: /etc/systemd/system/ansible-pull-software.timer
+        content: |
+          [Unit]
+          Description=Run ansible-pull every half hour
+
+          [Timer]
+          OnUnitActiveSec=30m
+
+          [Install]
+          WantedBy=timers.target
+    - systemd:
+        name: ansible-pull-software.service
+        enabled: true
+    - systemd:
+        name: ansible-pull-software.timer
+        enabled: true
+        state: started
+
+  - name: Create symlink to systemd unit for NotiCast
+    file:
+      src: /home/pi/vendor/iot-core/noticast.service
+      dest: /etc/systemd/system/noticast.service
+      state: link
+
+  - name: Enable systemd for the NotiCast service
+    systemd:
+      name: noticast.service
+      enabled: true
+      daemon_reload: true

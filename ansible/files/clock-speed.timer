@@ -1,0 +1,8 @@
+[Unit]
+Description=Reset clock speed every 5 minutes
+
+[Timer]
+OnUnitActiveSec=5m
+
+[Install]
+WantedBy=timers.target

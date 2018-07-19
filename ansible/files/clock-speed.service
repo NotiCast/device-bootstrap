@@ -1,0 +1,10 @@
+[Unit]
+Description=Set clock speed to better value
+
+[Service]
+EnvironmentFile=/etc/clock_speed.conf
+ExecStart=/bin/sh -c '/usr/bin/cpufreq-set -u $CLOCK_SPEED'
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target
