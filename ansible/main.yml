@@ -2,6 +2,7 @@
 - hosts: all
   vars:
     is_armbian: false
+    is_dev_mode: true
   gather_facts: false
   tasks:
   - name: Deploy SSH key
@@ -45,6 +46,7 @@
       path: /etc/ssh/sshd_config
       regexp: "^PasswordAuthentication"
       line: "PasswordAuthentication no"
+    when: is_dev_mode == false
 
   - name: Fix audio for Orange Pi Zero
     lineinfile:
@@ -82,6 +84,7 @@
         enabled: true
 
   - name: Install automated update system via ansible-pull
+    when: is_dev_mode == false
     block:
     - pip:
         name: ansible
@@ -137,7 +140,8 @@
         enabled: true
         state: started
 
-  - name: Install automated update system via ansible-pull
+  - name: Install user-level update system via ansible-pull
+    when: is_dev_mode == false
     block:
     - copy:
         dest: /etc/ansible/ansible-pull-software.env
