@@ -3,6 +3,7 @@
   vars:
     is_armbian: false
     is_dev_mode: true
+  become: true
   gather_facts: false
   tasks:
   - name: Deploy SSH key
@@ -65,6 +66,7 @@
         enabled: true
 
   - name: Enable systemd unit to auto-mount flash drives
+    when: is_armbian == true
     block:
     - copy:
         dest: /etc/clock_speed.conf
@@ -191,15 +193,3 @@
         name: ansible-pull-software.timer
         enabled: true
         state: started
-
-  - name: Create symlink to systemd unit for NotiCast
-    file:
-      src: /home/pi/vendor/iot-core/noticast.service
-      dest: /etc/systemd/system/noticast.service
-      state: link
-
-  - name: Enable systemd for the NotiCast service
-    systemd:
-      name: noticast.service
-      enabled: true
-      daemon_reload: true

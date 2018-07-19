@@ -60,3 +60,17 @@
     assemble:
       src: /tmp/chain
       dest: /home/pi/.config/noticast/chain.pem
+
+  - name: Create symlink to systemd unit for NotiCast
+    become: true
+    file:
+      src: /home/pi/vendor/iot-core/noticast.service
+      dest: /etc/systemd/system/noticast.service
+      state: link
+
+  - name: Enable systemd for the NotiCast service
+    become: true
+    systemd:
+      name: noticast.service
+      enabled: true
+      daemon_reload: true
