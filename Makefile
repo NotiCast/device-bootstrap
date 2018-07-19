@@ -1,18 +1,20 @@
-IMG_URL = https://dl.armbian.com/orangepizero/Debian_stretch_next.7z
-IMG_SUM = b1bc3f794ddd44a86e9290b15124ca40b5cce58b5341ce7d0739c18ff93d347f
-IMG_SUM_PROGRAM = gsha256sum --check
+IMG_URL ?= https://dl.armbian.com/orangepizero/Debian_stretch_next.7z
+IMG_SUM ?= b1bc3f794ddd44a86e9290b15124ca40b5cce58b5341ce7d0739c18ff93d347f
+IMG_SUM_PROGRAM ?= gsha256sum --check
 
-IMG_ZIP = Debian_stretch_next.7z
-IMG_FILE = Armbian_5.38_Orangepizero_Debian_stretch_next_4.14.14.img
+IMG_ZIP ?= Debian_stretch_next.7z
+IMG_FILE ?= Armbian_5.38_Orangepizero_Debian_stretch_next_4.14.14.img
 
 OS = $(shell uname | tr '[:upper:]' '[:lower:]')
 
-DISK_FILE = /dev/disk2
-BOOT_PARTITION = $(DISK_FILE)s1
+DISK_FILE ?= /dev/disk2
+BOOT_PARTITION ?= $(DISK_FILE)s1
 
-WGET = wget
-UNZIP = yes s | 7za e
-UNZIP_ARGS = $(IMG_FILE)
+WGET ?= wget
+UNZIP_PROGRAM ?= yes s | 7za e
+UNZIP_ARGS ?=
+
+DEVICE_USER ?= root
 
 .PHONY: image install deploy
 
@@ -21,9 +23,10 @@ all: install
 install: os-pre-$(OS) flash os-post-$(OS)
 
 deploy:
+	@echo "DEVICE_USER: $(DEVICE_USER)"
 	@echo "DEVICE_IP: $(DEVICE_IP)"
 	@echo "DEVICE_PASS: $(DEVICE_PASS)"
-	ansible-playbook ansible/main.yml -i "root@$(DEVICE_IP)," \
+	ansible-playbook ansible/main.yml -i "$(DEVICE_USER)@$(DEVICE_IP)," \
 		-e "ansible_ssh_pass=$(DEVICE_PASS)" \
 		-e "ansible_sudo_pass=$(DEVICE_PASS)"
 	ansible-playbook ansible/software.yml -i "$(DEVICE_IP),"
@@ -54,7 +57,7 @@ os-post-linux:
 
 $(IMG_FILE): $(IMG_ZIP)
 	echo "$(IMG_SUM) $(IMG_ZIP)" | $(IMG_SUM_PROGRAM)
-	$(UNZIP) $(IMG_ZIP) $(UNZIP_ARGS)
+	$(UNZIP_PROGRAM)
 
 $(IMG_ZIP):
 	$(WGET) $(IMG_URL) -O $(IMG_ZIP)
