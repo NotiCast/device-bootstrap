@@ -16,7 +16,7 @@ UNZIP_ARGS ?=
 
 DEVICE_USER ?= root
 
-.PHONY: image install deploy
+.PHONY: all install flash deploy os-pre-$(OS) os-post-$(OS)
 
 all: install
 
