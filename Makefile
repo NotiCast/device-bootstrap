@@ -16,16 +16,18 @@ UNZIP_ARGS ?=
 
 DEVICE_USER ?= root
 
-.PHONY: all install flash deploy os-pre-$(OS) os-post-$(OS)
+.PHONY: all install flash os-pre-$(OS) os-post-$(OS) echo deploy
 
 all: install
 
 install: os-pre-$(OS) flash os-post-$(OS)
 
-deploy:
+echo:
 	@echo "DEVICE_USER: $(DEVICE_USER)"
 	@echo "DEVICE_IP: $(DEVICE_IP)"
 	@echo "DEVICE_PASS: $(DEVICE_PASS)"
+
+deploy: echo
 	ansible-playbook ansible/main.yml -i "$(DEVICE_USER)@$(DEVICE_IP)," \
 		-e "ansible_ssh_pass=$(DEVICE_PASS)" \
 		-e "ansible_sudo_pass=$(DEVICE_PASS)"
