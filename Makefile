@@ -1,20 +1,20 @@
-IMG_URL ?= https://dl.armbian.com/orangepizero/Debian_stretch_next.7z
-IMG_SUM ?= b1bc3f794ddd44a86e9290b15124ca40b5cce58b5341ce7d0739c18ff93d347f
-IMG_SUM_PROGRAM ?= gsha256sum --check
+IMG_URL ?= 
+IMG_SUM ?= 
+IMG_SUM_PROGRAM ?= 
 
-IMG_ZIP ?= Debian_stretch_next.7z
-IMG_FILE ?= Armbian_5.38_Orangepizero_Debian_stretch_next_4.14.14.img
+IMG_ZIP ?= 
+IMG_FILE ?= 
 
 OS = $(shell uname | tr '[:upper:]' '[:lower:]')
 
-DISK_FILE ?= /dev/disk2
-BOOT_PARTITION ?= $(DISK_FILE)s1
+DISK_FILE ?= 
+BOOT_PARTITION ?= 
 
-WGET ?= wget
-UNZIP_PROGRAM ?= yes s | 7za e
+WGET ?= 
+UNZIP_PROGRAM ?= 
 UNZIP_ARGS ?=
 
-DEVICE_USER ?= root
+DEVICE_USER ?= 
 
 .PHONY: all install flash os-pre-$(OS) os-post-$(OS) echo deploy
 
@@ -23,6 +23,19 @@ all: install
 install: os-pre-$(OS) flash os-post-$(OS)
 
 echo:
+	@echo "-- install --"
+	@echo "IMG_URL: $(IMG_URL)"
+	@echo "IMG_SUM: $(IMG_SUM)"
+	@echo "IMG_SUM_PROGRAM: $(IMG_SUM_PROGRAM)"
+	@echo "IMG_ZIP: $(IMG_ZIP)"
+	@echo "IMG_FILE: $(IMG_FILE)"
+	@echo "OS: $(OS)"
+	@echo "DISK_FILE: $(DISK_FILE)"
+	@echo "BOOT_PARTITION: $(BOOT_PARTITION)"
+	@echo "WGET: $(WGET)"
+	@echo "UNZIP_PROGRAM: $(UNZIP_PROGRAM)"
+	@echo "UNZIP_ARGS: $(UNZIP_ARGS)"
+	@echo "-- deploy --"
 	@echo "DEVICE_USER: $(DEVICE_USER)"
 	@echo "DEVICE_IP: $(DEVICE_IP)"
 	@echo "DEVICE_PASS: $(DEVICE_PASS)"
@@ -32,6 +45,14 @@ deploy: echo
 		-e "ansible_ssh_pass=$(DEVICE_PASS)" \
 		-e "ansible_sudo_pass=$(DEVICE_PASS)"
 	ansible-playbook ansible/software.yml -i "$(DEVICE_IP),"
+
+deploy-using-password: echo
+	ansible-playbook ansible/main.yml -i "$(DEVICE_USER)@$(DEVICE_IP)," \
+		-e "ansible_ssh_pass=$(DEVICE_PASS)" \
+		-e "ansible_sudo_pass=$(DEVICE_PASS)"
+	ansible-playbook ansible/software.yml -i "$(DEVICE_IP)," \
+		-e "ansible_ssh_pass=$(DEVICE_PASS)" \
+		-e "ansible_sudo_pass=$(DEVICE_PASS)"
 
 flash: $(IMG_FILE)
 	pv < "$(IMG_FILE)" | sudo dd of="$(DISK_FILE)" bs=1m

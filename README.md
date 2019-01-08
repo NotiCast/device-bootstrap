@@ -31,14 +31,16 @@ for macOS.
 
 ## The Build Process
 
-1. Run `make install` to install the image onto the SD card
-2. Remove the SD card, put it in the device, and let it start booting
+1. Run `source raspbian.env` or `source armbian.env` depending on your config
+  - You probably want Raspbian
+2. Run `make install` to install the image onto the SD card
+3. Remove the SD card, put it in the device, and let it start booting
   - Note down the IP address for use with later steps
   - The device will print out an IP address if you can't nmap to find it
-3. Log in to the device to ensure setup is finished
+4. Log in to the device to ensure setup is finished
   - Root user/pass for Armbian is `root` and `1234`
   - Default user/pass for Raspbian is `pi` and `raspberry`
-3. Run `make shell-keys` to generate the shell keys used by Ansible
-4. Once the device boots up, run the following (s/'10.1.30.104'/your IP):
+5. Run `make shell-keys` to generate the shell keys used by Ansible
+6. Once the device boots up, run the following (s/'10.1.30.104'/your IP):
   - **Note:** Replace `raspberry` with the password of your user
   - `make deploy DEVICE_IP=10.1.30.104 DEVICE_PASS=raspberry`
